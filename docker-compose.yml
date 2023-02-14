@@ -1,0 +1,56 @@
+version: "3.4"
+
+volumes:
+  pgdata:
+
+services:
+  cv_test:
+    container_name: cv_test
+    image: cv_test
+    restart: always
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "8011:80"
+    depends_on:
+      fake_ai:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  fake_ai:
+    container_name: fake_ai
+    restart: always
+    image: fake_ai
+    build:
+      context: ./fake_ai
+      dockerfile: Dockerfile
+    ports:
+      - "4545:80"
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+    env_file:
+      - .env
+    healthcheck:
+      test: curl --fail http://localhost:80/healthcheck || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres_test:
+    container_name: postgres_test
+    restart: always
+    image: "postgres:15"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5438:5432"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5

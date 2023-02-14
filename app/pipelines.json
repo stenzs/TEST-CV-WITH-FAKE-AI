@@ -1,0 +1,8 @@
+{
+  "pipelines": [
+    {
+      "name":  "detect_auto",
+      "stages": ["photo_processing", "detect_auto_frame"]
+    }
+  ]
+}
